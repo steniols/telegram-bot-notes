@@ -1,5 +1,5 @@
 [Unit]
-Description=Segundo Cerebro - bot do Telegram
+Description=telegram-bot-notes - bot do Telegram (segundo cérebro)
 After=network-online.target
 Wants=network-online.target
 

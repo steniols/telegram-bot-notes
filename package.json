@@ -1,5 +1,5 @@
 {
-  "name": "segundo-cerebro-bot",
+  "name": "telegram-bot-notes",
   "version": "1.0.0",
   "description": "Segundo cérebro via Telegram: notas, músicas, bandas, filmes, vídeos e lembretes, com dashboard web.",
   "type": "module",

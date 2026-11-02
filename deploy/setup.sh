@@ -2,8 +2,8 @@
 # Roda na VM (chamado pelo deploy.ps1): instala Node 22, extrai o projeto e (re)inicia o serviço.
 set -euo pipefail
 
-APP="$HOME/segundo-cerebro"
-ARCHIVE="$HOME/segundo-cerebro.tgz"
+APP="$HOME/telegram-bot-notes"
+ARCHIVE="$HOME/telegram-bot-notes.tgz"
 
 if ! command -v node >/dev/null || [ "$(node -p 'process.versions.node.split(".")[0]')" -lt 22 ]; then
   echo ">> Instalando Node.js 22"
@@ -23,18 +23,18 @@ echo ">> Instalando dependências"
 npm ci --omit=dev --no-audit --no-fund
 
 echo ">> Configurando serviço"
-sed "s|__USER__|$USER|; s|__APP__|$APP|; s|__NODE__|$(command -v node)|" deploy/segundo-cerebro.service \
-  | sudo tee /etc/systemd/system/segundo-cerebro.service >/dev/null
+sed "s|__USER__|$USER|; s|__APP__|$APP|; s|__NODE__|$(command -v node)|" deploy/telegram-bot-notes.service \
+  | sudo tee /etc/systemd/system/telegram-bot-notes.service >/dev/null
 sudo systemctl daemon-reload
-sudo systemctl enable segundo-cerebro >/dev/null 2>&1
-sudo systemctl restart segundo-cerebro
+sudo systemctl enable telegram-bot-notes >/dev/null 2>&1
+sudo systemctl restart telegram-bot-notes
 
 sleep 4
-if systemctl is-active --quiet segundo-cerebro; then
+if systemctl is-active --quiet telegram-bot-notes; then
   echo ">> OK: bot rodando"
-  journalctl -u segundo-cerebro -n 5 --no-pager -o cat
+  journalctl -u telegram-bot-notes -n 5 --no-pager -o cat
 else
   echo ">> ERRO: o serviço não subiu. Logs:"
-  journalctl -u segundo-cerebro -n 30 --no-pager -o cat
+  journalctl -u telegram-bot-notes -n 30 --no-pager -o cat
   exit 1
 fi

@@ -1,4 +1,4 @@
-# 🧠 Segundo Cérebro (bot do Telegram)
+# 🧠 telegram-bot-notes — segundo cérebro (bot do Telegram)
 
 Anote notas, músicas, bandas, filmes/séries, vídeos e lembretes pelo Telegram, consulte por categoria
 e veja tudo num dashboard web. Lembretes são avisados **1 dia antes**, **2 horas antes** e **na hora**
@@ -72,7 +72,7 @@ Depois disso, **não rode o bot no PC**: o Telegram entrega cada mensagem para u
 
 O bot usa *long polling*: **não precisa abrir nenhuma porta** na Oracle para ele funcionar.
 
-**Logs:** `ssh -i chave.key ubuntu@IP_DA_VM journalctl -u segundo-cerebro -f`
+**Logs:** `ssh -i chave.key ubuntu@IP_DA_VM journalctl -u telegram-bot-notes -f`
 
 **Acessar o dashboard:** o jeito mais seguro é um túnel SSH, sem expor nada na internet:
 
@@ -92,7 +92,7 @@ sudo apt install -y sqlite3
 mkdir -p ~/backups
 crontab -e
 # adicione:
-0 3 * * * sqlite3 ~/segundo-cerebro/data/cerebro.db ".backup ~/backups/cerebro-$(date +\%F).db" && find ~/backups -mtime +30 -delete
+0 3 * * * sqlite3 ~/telegram-bot-notes/data/cerebro.db ".backup ~/backups/cerebro-$(date +\%F).db" && find ~/backups -mtime +30 -delete
 ```
 
 ## Estrutura

@@ -22,7 +22,7 @@ $items = @('package.json', 'package-lock.json', 'src', 'public', 'deploy', '.env
 if ($WithData) {
   if (Test-Path data/cerebro.db) { $items += 'data' } else { Write-Host 'Sem data/cerebro.db local; enviando sem dados.' }
 }
-$tgz = Join-Path $env:TEMP 'segundo-cerebro.tgz'
+$tgz = Join-Path $env:TEMP 'telegram-bot-notes.tgz'
 tar -czf $tgz @items
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao empacotar o projeto' }
 
@@ -30,15 +30,15 @@ $target = "$User@$Ip"
 $sshOpts = @('-i', $Key, '-o', 'StrictHostKeyChecking=accept-new')
 
 Write-Host ">> Enviando para $target"
-scp @sshOpts $tgz "${target}:~/segundo-cerebro.tgz"
+scp @sshOpts $tgz "${target}:~/telegram-bot-notes.tgz"
 if ($LASTEXITCODE -ne 0) { throw 'Falha no envio (scp). Confira IP, usuário e chave.' }
 Remove-Item $tgz
 
 Write-Host '>> Instalando e iniciando na VM'
-ssh @sshOpts $target 'tar -xzf ~/segundo-cerebro.tgz -C /tmp deploy/setup.sh && bash /tmp/deploy/setup.sh'
+ssh @sshOpts $target 'tar -xzf ~/telegram-bot-notes.tgz -C /tmp deploy/setup.sh && bash /tmp/deploy/setup.sh'
 if ($LASTEXITCODE -ne 0) { throw 'A instalação na VM falhou (veja as mensagens acima).' }
 
 Write-Host ''
 Write-Host 'Pronto! Lembre de NÃO rodar o bot no PC ao mesmo tempo (o Telegram só entrega as mensagens para um).'
 Write-Host "Dashboard: ssh -i `"$Key`" -L 3001:127.0.0.1:3001 $target   e abra http://localhost:3001"
-Write-Host "Logs:      ssh -i `"$Key`" $target journalctl -u segundo-cerebro -f"
+Write-Host "Logs:      ssh -i `"$Key`" $target journalctl -u telegram-bot-notes -f"
