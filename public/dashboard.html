@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Segundo Cérebro</title>
+<style>
+  :root {
+    --bg: #f6f6f4; --surface: #ffffff; --border: #e3e3df;
+    --text: #1d1d1b; --text-2: #5c5c57; --muted: #8a8a84;
+    --accent: #2f6fde; --accent-soft: #e8effc;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #151514; --surface: #1f1f1d; --border: #33332f;
+      --text: #ededea; --text-2: #b4b4ae; --muted: #85857f;
+      --accent: #7aa5f0; --accent-soft: #23304a;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1080px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 15px; margin: 32px 0 12px; color: var(--text-2); font-weight: 600; }
+  .sub { color: var(--muted); margin: 0; font-size: 13px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 20px; }
+  .tile { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+          cursor: pointer; text-align: left; font: inherit; color: inherit; }
+  .tile[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .tile .label { color: var(--text-2); font-size: 13px; }
+  .tile .value { font-size: 28px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  input[type=search] { flex: 1; min-width: 200px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border);
+                       background: var(--surface); color: var(--text); font: inherit; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  tr:last-child td { border-bottom: 0; }
+  td.num, th.num { color: var(--muted); font-variant-numeric: tabular-nums; width: 1%; white-space: nowrap; }
+  td.when { white-space: nowrap; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .pill { display: inline-block; padding: 1px 8px; border-radius: 99px; background: var(--bg);
+          border: 1px solid var(--border); font-size: 12px; color: var(--text-2); white-space: nowrap; }
+  .empty { padding: 24px; text-align: center; color: var(--muted); }
+  .content { word-break: break-word; }
+  .content a { color: var(--accent); }
+  @media (max-width: 640px) { .hide-sm { display: none; } th, td { padding: 8px 10px; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>🧠 Segundo Cérebro</h1>
+  <p class="sub" id="updated">Carregando…</p>
+
+  <div class="tiles" id="tiles"></div>
+
+  <h2>⏰ Próximos lembretes</h2>
+  <div class="card" id="upcoming"></div>
+
+  <h2>Itens salvos</h2>
+  <div class="toolbar" style="margin-bottom:12px">
+    <input type="search" id="search" placeholder="Buscar…" aria-label="Buscar itens">
+  </div>
+  <div class="card" id="list"></div>
+</main>
+<script>
+  const qs = location.search; // repassa ?token= para a API
+  let data = { categories: [], items: [] };
+  let filter = null;
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const linkify = (s) => esc(s).replace(/https?:\/\/[^\s<]+/g, (u) => `<a href="${u}" target="_blank" rel="noopener">${u}</a>`);
+  const fmt = (ms) => new Date(ms).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const cat = (id) => data.categories.find((c) => c.id === id) || { emoji: '', label: id };
+
+  function renderTiles() {
+    const counts = Object.fromEntries(data.categories.map((c) => [c.id, 0]));
+    data.items.forEach((it) => counts[it.category]++);
+    const tiles = [{ id: null, emoji: '📦', plural: 'Total', n: data.items.length },
+                   ...data.categories.map((c) => ({ ...c, n: counts[c.id] }))];
+    document.getElementById('tiles').innerHTML = tiles.map((t) => `
+      <button class="tile" data-id="${t.id ?? ''}" aria-pressed="${filter === t.id}">
+        <div class="label">${t.emoji} ${esc(t.plural)}</div>
+        <div class="value">${t.n}</div>
+      </button>`).join('');
+  }
+
+  function renderUpcoming() {
+    const now = Date.now();
+    const next = data.items.filter((it) => it.remind_at && it.remind_at > now).sort((a, b) => a.remind_at - b.remind_at).slice(0, 5);
+    document.getElementById('upcoming').innerHTML = next.length
+      ? `<table><tbody>${next.map((it) => `<tr><td class="when">${fmt(it.remind_at)}</td><td class="content">${linkify(it.content)}</td></tr>`).join('')}</tbody></table>`
+      : '<div class="empty">Nenhum lembrete futuro.</div>';
+  }
+
+  function renderList() {
+    const q = document.getElementById('search').value.toLowerCase();
+    const rows = data.items.filter((it) => (!filter || it.category === filter) && (!q || it.content.toLowerCase().includes(q)));
+    document.getElementById('list').innerHTML = rows.length
+      ? `<table><thead><tr><th class="num">#</th><th>Conteúdo</th><th>Categoria</th><th class="hide-sm">Data</th></tr></thead><tbody>
+          ${rows.map((it) => { const c = cat(it.category); return `<tr>
+            <td class="num">${it.id}</td>
+            <td class="content">${linkify(it.content)}</td>
+            <td><span class="pill">${c.emoji} ${esc(c.label)}</span></td>
+            <td class="when hide-sm">${fmt(it.remind_at || it.created_at)}</td></tr>`; }).join('')}
+         </tbody></table>`
+      : '<div class="empty">Nada encontrado.</div>';
+  }
+
+  function render() { renderTiles(); renderUpcoming(); renderList(); }
+
+  document.getElementById('tiles').addEventListener('click', (e) => {
+    const btn = e.target.closest('.tile');
+    if (!btn) return;
+    filter = btn.dataset.id || null;
+    render();
+  });
+  document.getElementById('search').addEventListener('input', renderList);
+
+  async function load() {
+    try {
+      const res = await fetch('/api/items' + qs);
+      if (!res.ok) throw new Error(res.status);
+      data = await res.json();
+      document.getElementById('updated').textContent = 'Atualizado às ' + new Date().toLocaleTimeString('pt-BR');
+      render();
+    } catch (err) {
+      document.getElementById('updated').textContent = 'Erro ao carregar dados (' + err.message + ')';
+    }
+  }
+  load();
+  setInterval(load, 60000);
+</script>
+</body>
+</html>

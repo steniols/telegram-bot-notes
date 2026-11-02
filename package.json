@@ -1,0 +1,17 @@
+{
+  "name": "segundo-cerebro-bot",
+  "version": "1.0.0",
+  "description": "Segundo cérebro via Telegram: notas, músicas, bandas, filmes, vídeos e lembretes, com dashboard web.",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning src/index.js",
+    "test": "node --disable-warning=ExperimentalWarning --test \"test/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22.13"
+  },
+  "dependencies": {
+    "grammy": "^1.30.0"
+  }
+}

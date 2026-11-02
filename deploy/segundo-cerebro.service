@@ -1,0 +1,14 @@
+[Unit]
+Description=Segundo Cerebro - bot do Telegram
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+WorkingDirectory=__APP__
+ExecStart=__NODE__ --disable-warning=ExperimentalWarning src/index.js
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
