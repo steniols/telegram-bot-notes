@@ -53,32 +53,32 @@ Dashboard: http://127.0.0.1:3000
 > Se aparecer "Out of capacity" no A1, tente outro Availability Domain ou tente de novo mais tarde.
 > É comum na região de São Paulo.
 
-**Instalar e subir** (conectado via `ssh -i chave.key ubuntu@IP_DA_VM`):
+> **Atenção:** contas só "Always Free" podem ter VMs paradas por ociosidade (CPU, rede e memória baixas
+> por 7 dias), e este bot usa quase nada. Para evitar, faça o upgrade para **Pay As You Go**: os recursos
+> Always Free continuam grátis. Crie também um alerta de orçamento (Billing → Budgets) de R$ 1 por segurança.
 
-```bash
-# Node.js 22
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
-sudo apt install -y nodejs
+**Enviar e subir** (do seu Windows, na pasta do projeto). O script empacota o projeto com o `.env`, envia por
+SSH, instala o Node 22 e registra o bot como serviço (sobe sozinho após reboot e reinicia se cair):
 
-# Projeto (envie a pasta com scp ou git clone)
-mkdir -p ~/segundo-cerebro && cd ~/segundo-cerebro
-# do seu PC: scp -i chave.key -r package.json package-lock.json src public deploy .env ubuntu@IP_DA_VM:~/segundo-cerebro/
-npm ci --omit=dev
+```powershell
+# Primeira vez: -WithData leva junto as anotações que já estão no PC
+.\deploy\deploy.ps1 -Ip IP_DA_VM -Key C:\caminho\chave.key -WithData
 
-# Rodar como serviço (sobe sozinho após reboot e reinicia se cair)
-sudo cp deploy/segundo-cerebro.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now segundo-cerebro
-journalctl -u segundo-cerebro -f      # ver os logs
+# Atualizações de código depois (mantém os dados do servidor)
+.\deploy\deploy.ps1 -Ip IP_DA_VM -Key C:\caminho\chave.key
 ```
 
+Depois disso, **não rode o bot no PC**: o Telegram entrega cada mensagem para uma só instância.
+
 O bot usa *long polling*: **não precisa abrir nenhuma porta** na Oracle para ele funcionar.
+
+**Logs:** `ssh -i chave.key ubuntu@IP_DA_VM journalctl -u segundo-cerebro -f`
 
 **Acessar o dashboard:** o jeito mais seguro é um túnel SSH, sem expor nada na internet:
 
 ```bash
-ssh -i chave.key -L 3000:127.0.0.1:3000 ubuntu@IP_DA_VM
-# e abra http://localhost:3000 no seu navegador
+ssh -i chave.key -L 3001:127.0.0.1:3001 ubuntu@IP_DA_VM
+# e abra http://localhost:3001 no seu navegador (porta = DASHBOARD_PORT do .env)
 ```
 
 Para acessar direto pelo celular, defina `DASHBOARD_HOST=0.0.0.0` e um `DASHBOARD_TOKEN` longo no `.env`, libere a
