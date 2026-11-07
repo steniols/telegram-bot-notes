@@ -1,10 +1,8 @@
 # 🧠 telegram-bot-notes — segundo cérebro (bot do Telegram)
 
-Anote notas, músicas, bandas, filmes/séries, vídeos e lembretes pelo Telegram, consulte por categoria
+Faça anotaçoes e grave lembretes pelo Telegram, consulte por categoria
 e veja tudo num dashboard web. Lembretes são avisados **1 dia antes**, **2 horas antes** e **na hora**
 (os avisos que já não cabem, num lembrete próximo, são pulados).
-
-Custo: R$ 0 (Telegram Bot API + SQLite + Oracle Cloud Always Free).
 
 ## Como usar o bot
 
