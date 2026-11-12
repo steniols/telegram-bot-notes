@@ -93,6 +93,15 @@ test('db: limpar categoria e tudo', () => {
   assert.equal(db.listChat(2).length, 1);
 });
 
+test('db: apagar pelo id (dashboard)', () => {
+  const db = openDb(':memory:');
+  const a = db.addItem(1, 'filme', 'A');
+  db.addItem(2, 'filme', 'B');
+  assert.equal(db.deleteById(a), true);
+  assert.equal(db.deleteById(a), false);
+  assert.equal(db.listAll().length, 1);
+});
+
 test('lembretes: avisa 24h e 2h antes, uma vez cada', async () => {
   const db = openDb(':memory:');
   const sent = [];

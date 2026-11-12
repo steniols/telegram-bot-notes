@@ -39,6 +39,7 @@ export function openDb(path) {
     byChat: db.prepare('SELECT * FROM items WHERE chat_id = ? ORDER BY created_at DESC'),
     get: db.prepare('SELECT * FROM items WHERE id = ? AND chat_id = ?'),
     delete: db.prepare('DELETE FROM items WHERE id = ? AND chat_id = ?'),
+    deleteById: db.prepare('DELETE FROM items WHERE id = ?'),
     deleteCategory: db.prepare('DELETE FROM items WHERE chat_id = ? AND category = ?'),
     deleteChat: db.prepare('DELETE FROM items WHERE chat_id = ?'),
     pending: db.prepare('SELECT * FROM items WHERE remind_at IS NOT NULL AND sent_now = 0 AND remind_at <= ?'),
@@ -62,6 +63,8 @@ export function openDb(path) {
     listChat: (chatId) => stmts.byChat.all(chatId),
     getItem: (chatId, id) => stmts.get.get(id, chatId),
     deleteItem: (chatId, id) => stmts.delete.run(id, chatId).changes > 0,
+    // Usado pelo dashboard, que mostra os itens de todos os chats
+    deleteById: (id) => stmts.deleteById.run(id).changes > 0,
     // category = id da categoria, ou 'all' para apagar tudo. Retorna quantos itens saíram.
     clear: (chatId, category) => Number(
       (category === 'all' ? stmts.deleteChat.run(chatId) : stmts.deleteCategory.run(chatId, category)).changes),

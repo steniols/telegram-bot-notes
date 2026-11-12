@@ -27,6 +27,12 @@ export function startDashboard({ db, host, port, token }) {
       res.writeHead(200, { 'content-type': 'application/json; charset=utf-8' });
       return res.end(JSON.stringify({ categories: CATEGORIES, items: db.listAll() }));
     }
+    // DELETE exige preflight CORS, que o servidor não libera: outros sites não conseguem chamar esta rota
+    const del = url.pathname.match(/^\/api\/items\/(\d+)$/);
+    if (del && req.method === 'DELETE') {
+      res.writeHead(db.deleteById(Number(del[1])) ? 204 : 404);
+      return res.end();
+    }
     res.writeHead(404).end();
   });
   server.listen(port, host, () => console.log(`Dashboard em http://${host}:${port}${token ? '/?token=...' : ''}`));

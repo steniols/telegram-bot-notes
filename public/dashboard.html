@@ -45,6 +45,11 @@
   .empty { padding: 24px; text-align: center; color: var(--muted); }
   .content { word-break: break-word; }
   .content a { color: var(--accent); }
+  td.act { width: 1%; padding-left: 0; }
+  .del { background: none; border: 1px solid transparent; border-radius: 6px; padding: 2px 6px; cursor: pointer;
+         font: inherit; color: var(--muted); opacity: .6; }
+  .del:hover, .del:focus-visible { opacity: 1; border-color: var(--border); background: var(--bg); }
+  .del:disabled { cursor: wait; }
   @media (max-width: 640px) { .hide-sm { display: none; } th, td { padding: 8px 10px; } }
 </style>
 </head>
@@ -98,12 +103,13 @@
     const q = document.getElementById('search').value.toLowerCase();
     const rows = data.items.filter((it) => (!filter || it.category === filter) && (!q || it.content.toLowerCase().includes(q)));
     document.getElementById('list').innerHTML = rows.length
-      ? `<table><thead><tr><th class="num">#</th><th>Conteúdo</th><th>Categoria</th><th class="hide-sm">Data</th></tr></thead><tbody>
+      ? `<table><thead><tr><th class="num">#</th><th>Conteúdo</th><th>Categoria</th><th class="hide-sm">Data</th><th class="act"></th></tr></thead><tbody>
           ${rows.map((it) => { const c = cat(it.category); return `<tr>
             <td class="num">${it.id}</td>
             <td class="content">${linkify(it.content)}</td>
             <td><span class="pill">${c.emoji} ${esc(c.label)}</span></td>
-            <td class="when hide-sm">${fmt(it.remind_at || it.created_at)}</td></tr>`; }).join('')}
+            <td class="when hide-sm">${fmt(it.remind_at || it.created_at)}</td>
+            <td class="act"><button class="del" data-id="${it.id}" title="Excluir" aria-label="Excluir item #${it.id}">🗑️</button></td></tr>`; }).join('')}
          </tbody></table>`
       : '<div class="empty">Nada encontrado.</div>';
   }
@@ -117,6 +123,23 @@
     render();
   });
   document.getElementById('search').addEventListener('input', renderList);
+  document.getElementById('list').addEventListener('click', async (e) => {
+    const btn = e.target.closest('.del');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    const it = data.items.find((x) => x.id === id);
+    if (!confirm(`Excluir o item #${id}?\n\n${it ? it.content : ''}`)) return;
+    btn.disabled = true;
+    try {
+      const res = await fetch(`/api/items/${id}` + qs, { method: 'DELETE' });
+      if (!res.ok && res.status !== 404) throw new Error(res.status);
+      data.items = data.items.filter((x) => x.id !== id);
+      render();
+    } catch (err) {
+      btn.disabled = false;
+      alert('Não foi possível excluir (' + err.message + ')');
+    }
+  });
 
   async function load() {
     try {
